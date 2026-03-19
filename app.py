@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_login import LoginManager
 from models import db, User
 
@@ -23,7 +23,7 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    return "NexRate is running!"
+    return render_template("index.html")
 
 if __name__ == "__main__":
     with app.app_context():
