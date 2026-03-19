@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- Welcome Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1>Welcome back, {{ username }}!</h1>
+            <p class="dashboard-subtitle">Live currency rates — updated in real time</p>
+        </div>
+        <div class="base-currency-badge">Base: USD</div>
+    </div>
+
+    <!-- Featured Currency Cards -->
+    <div class="rates-grid">
+        {% for currency, rate in featured_pairs.items() %}
+        <div class="rate-card">
+            <div class="rate-currency">{{ currency }}</div>
+            <div class="rate-value">{{ "%.4f"|format(rate) }}</div>
+            <div class="rate-label">1 USD = {{ "%.4f"|format(rate) }} {{ currency }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Currency Converter -->
+    <div class="converter-section">
+        <h2>Currency Converter</h2>
+        <div class="converter-card">
+            <div class="converter-row">
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="amount" placeholder="Enter amount" value="1">
+                </div>
+                <div class="form-group">
+                    <label>From</label>
+                    <select id="fromCurrency">
+                        <option value="USD">USD</option>
+                        {% for currency in rates.keys() %}
+                        <option value="{{ currency }}">{{ currency }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>To</label>
+                    <select id="toCurrency">
+                        <option value="PKR">PKR</option>
+                        {% for currency in rates.keys() %}
+                        <option value="{{ currency }}">{{ currency }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="btn-convert" onclick="convertCurrency()">Convert</button>
+            </div>
+            <div class="converter-result" id="result">
+                Enter an amount and click Convert
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const rates = {{ rates | tojson }};
+
+    function convertCurrency() {
+        const amount = parseFloat(document.getElementById("amount").value);
+        const from = document.getElementById("fromCurrency").value;
+        const to = document.getElementById("toCurrency").value;
+
+        if (!amount || isNaN(amount)) {
+            document.getElementById("result").innerText = "Please enter a valid amount";
+            return;
+        }
+
+        const usdAmount = from === "USD" ? amount : amount / rates[from];
+        const convertedAmount = usdAmount * rates[to];
+
+        document.getElementById("result").innerText = 
+            `${amount} ${from} = ${convertedAmount.toFixed(4)} ${to}`;
+    }
+</script>
+{% endblock %}

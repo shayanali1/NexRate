@@ -2,9 +2,25 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
+import requests
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
-app.secret_key = "nexrate_secret_key"
+app.secret_key = os.getenv("SECRET_KEY", "nexrate_secret_key")
+EXCHANGE_API_KEY = os.getenv("EXCHANGE_API_KEY")
+
+def get_exchange_rates(base_currency="USD"):
+    try:
+        url = f"https://v6.exchangerate-api.com/v6/{EXCHANGE_API_KEY}/latest/{base_currency}"
+        response = requests.get(url)
+        data = response.json()
+        if data["result"] == "success":
+            return data["conversion_rates"]
+        return None
+    except:
+        return None
 
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///nexrate.db"
@@ -65,7 +81,25 @@ def login():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return "Welcome to your dashboard!"
+    print("API KEY:", EXCHANGE_API_KEY)
+    rates = get_exchange_rates("USD")
+    print("RATES:", rates)
+    
+    featured_pairs = {}
+    if rates:
+        featured_pairs = {
+            "PKR": rates.get("PKR"),
+            "EUR": rates.get("EUR"),
+            "GBP": rates.get("GBP"),
+            "SAR": rates.get("SAR"),
+            "AED": rates.get("AED"),
+            "CAD": rates.get("CAD"),
+        }
+    
+    return render_template("dashboard.html", 
+                         featured_pairs=featured_pairs,
+                         rates=rates,
+                         username=current_user.username)
 
 @app.route("/logout")
 @login_required
