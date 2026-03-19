@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User
+from models import db, User, Watchlist
 import requests
 import os
 from dotenv import load_dotenv
@@ -101,7 +101,44 @@ def dashboard():
                          rates=rates,
                          username=current_user.username)
 
-@app.route("/logout")
+@app.route("/profile")
+@login_required
+def profile():
+    watchlist = Watchlist.query.filter_by(user_id=current_user.id).all()
+    return render_template("profile.html", watchlist=watchlist)
+
+@app.route("/watchlist/add", methods=["POST"])
+@login_required
+def add_watchlist():
+    base_currency = request.form.get("base_currency")
+    target_currency = request.form.get("target_currency")
+    
+    # Check if pair already exists
+    existing = Watchlist.query.filter_by(
+        user_id=current_user.id,
+        base_currency=base_currency,
+        target_currency=target_currency
+    ).first()
+    
+    if not existing:
+        new_pair = Watchlist(
+            user_id=current_user.id,
+            base_currency=base_currency,
+            target_currency=target_currency
+        )
+        db.session.add(new_pair)
+        db.session.commit()
+    
+    return redirect(url_for("profile"))
+
+@app.route("/watchlist/delete/<int:id>")
+@login_required
+def delete_watchlist(id):
+    pair = Watchlist.query.get_or_404(id)
+    if pair.user_id == current_user.id:
+        db.session.delete(pair)
+        db.session.commit()
+    return redirect(url_for("profile"))
 @login_required
 def logout():
     logout_user()

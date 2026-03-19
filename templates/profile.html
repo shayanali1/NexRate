@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- Profile Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1>My Profile</h1>
+            <p class="dashboard-subtitle">Your account details and watchlist</p>
+        </div>
+    </div>
+
+    <!-- User Details Card -->
+    <div class="profile-grid">
+        <div class="profile-card">
+            <h2>Account Details</h2>
+            <div class="profile-info">
+                <div class="profile-row">
+                    <span class="profile-label">Username</span>
+                    <span class="profile-value">{{ current_user.username }}</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Email</span>
+                    <span class="profile-value">{{ current_user.email }}</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Member Since</span>
+                    <span class="profile-value">{{ current_user.created_at.strftime('%B %d, %Y') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Watchlist Card -->
+        <div class="profile-card">
+            <h2>My Watchlist</h2>
+
+            <!-- Add to Watchlist Form -->
+            <form method="POST" action="/watchlist/add">
+                <div class="watchlist-form">
+                    <select name="base_currency">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="PKR">PKR</option>
+                        <option value="SAR">SAR</option>
+                        <option value="AED">AED</option>
+                    </select>
+                    <span class="arrow">→</span>
+                    <select name="target_currency">
+                        <option value="PKR">PKR</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="SAR">SAR</option>
+                        <option value="AED">AED</option>
+                    </select>
+                    <button type="submit" class="btn-convert">Add</button>
+                </div>
+            </form>
+
+            <!-- Watchlist Items -->
+            {% if watchlist %}
+                {% for item in watchlist %}
+                <div class="watchlist-item">
+                    <span class="watchlist-pair">
+                        {{ item.base_currency }} → {{ item.target_currency }}
+                    </span>
+                    <a href="/watchlist/delete/{{ item.id }}" class="delete-btn">Remove</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty-watchlist">No pairs added yet. Add your first pair above!</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
