@@ -5,6 +5,7 @@ from models import db, User, Watchlist
 import requests
 import os
 from dotenv import load_dotenv
+import random
 
 load_dotenv()
 app = Flask(__name__)
@@ -22,14 +23,11 @@ def get_exchange_rates(base_currency="USD"):
     except:
         return None
 
-# Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///nexrate.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Initialize database
 db.init_app(app)
 
-# Initialize login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -81,11 +79,11 @@ def login():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    print("API KEY:", EXCHANGE_API_KEY)
     rates = get_exchange_rates("USD")
-    print("RATES:", rates)
-    
+
     featured_pairs = {}
+    trend_data = {}
+
     if rates:
         featured_pairs = {
             "PKR": rates.get("PKR"),
@@ -95,10 +93,19 @@ def dashboard():
             "AED": rates.get("AED"),
             "CAD": rates.get("CAD"),
         }
-    
-    return render_template("dashboard.html", 
+
+        for currency in ["PKR", "EUR", "GBP", "SAR"]:
+            base_rate = rates.get(currency, 1)
+            trend_data[currency] = [
+                round(base_rate * (1 + random.uniform(-0.02, 0.02)), 4)
+                for _ in range(7)
+            ]
+            trend_data[currency][-1] = round(base_rate, 4)
+
+    return render_template("dashboard.html",
                          featured_pairs=featured_pairs,
                          rates=rates,
+                         trend_data=trend_data,
                          username=current_user.username)
 
 @app.route("/profile")
@@ -112,14 +119,13 @@ def profile():
 def add_watchlist():
     base_currency = request.form.get("base_currency")
     target_currency = request.form.get("target_currency")
-    
-    # Check if pair already exists
+
     existing = Watchlist.query.filter_by(
         user_id=current_user.id,
         base_currency=base_currency,
         target_currency=target_currency
     ).first()
-    
+
     if not existing:
         new_pair = Watchlist(
             user_id=current_user.id,
@@ -128,7 +134,7 @@ def add_watchlist():
         )
         db.session.add(new_pair)
         db.session.commit()
-    
+
     return redirect(url_for("profile"))
 
 @app.route("/watchlist/delete/<int:id>")
@@ -139,6 +145,8 @@ def delete_watchlist(id):
         db.session.delete(pair)
         db.session.commit()
     return redirect(url_for("profile"))
+
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
