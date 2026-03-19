@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager
 from models import db, User
 
@@ -24,6 +24,10 @@ def load_user(user_id):
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@app.route("/register")
+def register():
+    return render_template("register.html")
 
 if __name__ == "__main__":
     with app.app_context():
