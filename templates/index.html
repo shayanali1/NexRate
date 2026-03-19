@@ -4,9 +4,20 @@
 
 {% block content %}
 <div class="hero">
-    <h1>Welcome to NexRate</h1>
-    <p>Your personal currency and finance intelligence dashboard.</p>
-    <a href="/register" class="btn">Get Started</a>
-    <a href="/login" class="btn-outline">Login</a>
+    {% if current_user.is_authenticated %}
+        <h1>Welcome back, {{ current_user.username }}!</h1>
+        <p>Your currency intelligence dashboard is ready. Track live rates, convert currencies and manage your watchlist.</p>
+        <div class="hero-buttons">
+            <a href="/dashboard" class="btn">Go to Dashboard</a>
+            <a href="/profile" class="btn-outline">My Profile</a>
+        </div>
+    {% else %}
+        <h1>Currency & Finance Intelligence Dashboard</h1>
+        <p>Track real-time currency rates, analyze trends, and manage your personal watchlist with NexRate.</p>
+        <div class="hero-buttons">
+            <a href="/register" class="btn">Get Started</a>
+            <a href="/login" class="btn-outline">Login</a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
